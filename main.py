@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import messagebox
 from random import *
 import pyperclip
+import json
 
 def rando_pass():
     pass_txt.delete(0,END)
@@ -22,25 +23,60 @@ def rando_pass():
     password = "".join(password_list)
     pass_txt.insert(0, password)
     pyperclip.copy(password)
-
+    
+def find_password():
+    website = website_txt.get()
+    try:
+        with open("data.json", "r") as data_file:
+            content = json.load(data_file)
+        
+            if website_txt.get() in content:
+                email = content[website]["email"]
+                password = content[website]["password"]
+                
+                messagebox.showinfo(title="User Information", message=f"Website: {website}\n Username: {email}\n Password: {password}")
+            
+            elif website_txt.get() not in content:
+                messagebox.showinfo(title="Oops", message="No details for the website exist.")
+    except FileNotFoundError:
+            with open("data.json", "w") as data_file:
+                json.dump
 
 def save():
 
     website = website_txt.get()
     email = log_in_txt.get()
     password = pass_txt.get()
+    new_data = {
+         website : {
+        "email": email,
+        "password": password
+        }
+    }
+    
     
     if len(website) == 0 or len(password) == 0:
         messagebox.showinfo(title="Oops", message="Please make sure you haven't left any fields empty.")
-    
-    is_ok = messagebox.askokcancel(title=website, message=f"these are the details entered: \nEmail: {email} "
-                                   f"\nPassword: {password} \nIs it ok to save?")
-    
-    if is_ok:
-        with open("data.txt", "a") as data_file:
-            data_file.write(f"{website}, {email}, {password}\n")
+    else:
+        try:   
+            with open("data.json", "r") as data_file:
+                data = json.load(data_file)
+                data.update(new_data)
+        
+        except FileNotFoundError:
+            with open("data.json", "w") as data_file:
+             json.dump(new_data, data_file, indent=4)
+        
+        else:
+            data.update(new_data)
+        
+            with open("data.json", "w") as data_file:
+                json.dump(data,data_file, indent=4)
+                
+        finally:
             website_txt.delete(0, END)
             pass_txt.delete(0, END)
+            
 
 
 
@@ -58,12 +94,16 @@ canvas.grid(row=0, column=1, columnspan=1)
 
 website_label = Label (text="Website:")
 website_label.grid(row=1, column=0, columnspan=1)
-website_txt = Entry(width=35)
-website_txt.grid(row=1, column=1, columnspan=2)
+website_txt = Entry(width=21)
+website_txt.grid(row=1, column=1)
 website_txt.focus()
 
+search_button = Button(text="Search", width=10, command=find_password)
+search_button.grid(row=1, column=2)
+search_button.config(padx=10)
+
 log_in_label = Label(text="Email/Username:")
-log_in_label.grid(row=2, column=0, columnspan=1)
+log_in_label.grid(row=2, column=0)
 log_in_txt = Entry(width=35)
 log_in_txt.grid(row=2, column=1, columnspan=2)
 
